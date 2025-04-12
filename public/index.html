@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do App</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="auth-container" class="auth-container">
+    <div class="auth-box">
+      <h2>Connexion</h2>
+      <form id="loginForm">
+        <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+        <input type="password" id="password" placeholder="Mot de passe" required>
+        <button type="submit">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="header">
+      <h1>Ma To-Do List</h1>
+      <div class="header-buttons">
+        <button id="syncButton" class="sync-button" title="Synchroniser les tâches">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+        <button id="themeToggle" class="theme-toggle" title="Changer le thème">
+          <i class="fas fa-sun"></i>
+        </button>
+        <button id="logoutBtn" class="logout-button" title="Se déconnecter">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <div class="input-container">
+        <input type="text" id="taskInput" placeholder="Ajouter une nouvelle tâche...">
+        <input type="date" id="dueDateInput" title="Date limite">
+        <button id="addTaskBtn" title="Ajouter une tâche">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+
+      <div class="filters-container">
+        <div class="basic-filters">
+          <button id="filterAll" class="active">Toutes</button>
+          <button id="filterActive">En cours</button>
+          <button id="filterCompleted">Terminées</button>
+        </div>
+        
+        <div class="advanced-filters">
+          <select id="sortBy">
+            <option value="createdAt">Date de création</option>
+            <option value="dueDate">Date limite</option>
+            <option value="name">Alphabétique</option>
+          </select>
+          
+          <div class="date-filter">
+            <label>Échéance :</label>
+            <select id="dueDateFilter">
+              <option value="all">Toutes</option>
+              <option value="today">Aujourd'hui</option>
+              <option value="week">Cette semaine</option>
+              <option value="overdue">En retard</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="offlineIndicator" class="offline-indicator hidden">
+        Mode hors ligne - Les modifications seront synchronisées lors de la reconnexion
+      </div>
+
+      <ul id="taskList" class="task-list"></ul>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
