@@ -102,6 +102,9 @@ h1 {
   gap: 12px;
   margin-bottom: 24px;
   align-items: center;
+  background-color: var(--hover-color);
+  padding: 16px;
+  border-radius: var(--radius);
 }
 
 #taskInput, #dueDateInput {
@@ -234,19 +237,20 @@ select:focus {
   border-radius: var(--radius);
   transition: var(--transition);
   cursor: grab;
+  box-shadow: var(--shadow);
 }
 
 .task-list li:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .task-container {
   display: grid;
   grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 16px;
+  padding: 20px;
 }
 
 .status-icon {
@@ -260,6 +264,7 @@ select:focus {
   color: white;
   font-size: 12px;
   transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .status-icon.completed {
@@ -272,6 +277,7 @@ select:focus {
   transition: var(--transition);
   padding: 4px 8px;
   border-radius: 4px;
+  font-weight: 500;
 }
 
 .task-text:hover {
@@ -284,17 +290,21 @@ select:focus {
 }
 
 .complete-btn, .delete-btn, .edit-btn {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: none;
   border-radius: var(--radius);
   color: white;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   transition: var(--transition);
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 100px;
+  justify-content: center;
+  margin: 10px;
 }
 
 .complete-btn {
@@ -317,6 +327,7 @@ select:focus {
 .complete-btn:hover, .delete-btn:hover, .edit-btn:hover {
   transform: translateY(-2px);
   filter: brightness(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .task-editable {
@@ -328,11 +339,12 @@ select:focus {
   color: var(--text-color);
   width: 100%;
   transition: var(--transition);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .task-editable:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
 .due-date {
@@ -343,6 +355,14 @@ select:focus {
   background-color: var(--hover-color);
   border-radius: 10px;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.due-date::before {
+  content: '📅';
+  font-size: 14px;
 }
 
 .overdue {
@@ -365,6 +385,8 @@ select:focus {
   min-width: 250px;
   text-align: center;
   font-size: 14px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .notification.success {
@@ -501,8 +523,8 @@ select:focus {
     grid-template-areas:
       "status text"
       "date buttons";
-    gap: 8px;
-    padding: 12px;
+    gap: 12px;
+    padding: 16px;
   }
 
   .status-icon {
@@ -521,13 +543,16 @@ select:focus {
   .task-buttons {
     grid-area: buttons;
     display: flex;
-    gap: 8px;
+    gap: 12px;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 8px;
   }
 
   .complete-btn, .delete-btn, .edit-btn {
-    padding: 4px 8px;
+    padding: 6px 12px;
     font-size: 12px;
+    min-width: 80px;
   }
 }
 
@@ -553,6 +578,22 @@ select:focus {
     font-size: 12px;
     padding: 10px 20px;
   }
+
+  .task-container {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .task-buttons {
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .complete-btn, .delete-btn, .edit-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+  }
 }
 
 @media (max-width: 320px) {
@@ -563,10 +604,19 @@ select:focus {
       "text"
       "date"
       "buttons";
+    gap: 12px;
   }
 
   .task-buttons {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .complete-btn, .delete-btn, .edit-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
   }
 }
   

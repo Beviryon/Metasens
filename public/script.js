@@ -351,7 +351,7 @@ function addTask() {
 }
 
 // Change le statut d'une tâche (terminée/en cours)
-function toggleTask(id) {
+function toggleTaskCompletion(id) {
   const taskIndex = tasks.findIndex(t => t.id === id);
   if (taskIndex !== -1) {
     tasks[taskIndex].completed = !tasks[taskIndex].completed;
@@ -359,6 +359,12 @@ function toggleTask(id) {
     showNotification(`Tâche marquée comme ${tasks[taskIndex].completed ? 'terminée' : 'en cours'}`);
     loadTasks();
   }
+}
+
+// Sauvegarde les tâches dans le localStorage
+function saveTasks() {
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  loadTasks();
 }
 
 // Écouteurs pour les filtres
@@ -380,4 +386,21 @@ function initializeApp() {
 
 // Démarre l'application
 initializeApp();
+
+// Fonction pour vérifier si une tâche est en retard
+function isOverdue(dueDate) {
+  if (!dueDate) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  return due < today;
+}
+
+// Fonction pour formater la date
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString();
+}
   
