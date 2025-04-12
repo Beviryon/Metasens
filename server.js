@@ -1,6 +1,19 @@
 const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+
+// Chargement des variables d'environnement
+dotenv.config();
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+
+// Configuration CORS
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // Base de données simulée
 let tasks = [
@@ -106,5 +119,14 @@ app.delete('/tasks/:id', (req, res) => {
   res.status(204).send();
 });
 
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Une erreur est survenue sur le serveur' });
+});
+
 // Démarrage du serveur
-app.listen(port, () => console.log(`Serveur démarré sur http://localhost:${port}`));
+app.listen(port, () => {
+  console.log(`Serveur démarré sur http://localhost:${port}`);
+  console.log(`Environnement: ${process.env.NODE_ENV}`);
+});

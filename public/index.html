@@ -23,9 +23,6 @@
     <div class="header">
       <h1>Ma To-Do List</h1>
       <div class="header-buttons">
-        <button id="syncButton" class="sync-button" title="Synchroniser les tâches">
-          <i class="fas fa-sync-alt"></i>
-        </button>
         <button id="themeToggle" class="theme-toggle" title="Changer le thème">
           <i class="fas fa-sun"></i>
         </button>
@@ -52,7 +49,7 @@
         </div>
         
         <div class="advanced-filters">
-          <select id="sortBy">
+          <select id="sortBy" title="Trier les tâches par">
             <option value="createdAt">Date de création</option>
             <option value="dueDate">Date limite</option>
             <option value="name">Alphabétique</option>
@@ -60,7 +57,7 @@
           
           <div class="date-filter">
             <label>Échéance :</label>
-            <select id="dueDateFilter">
+            <select id="dueDateFilter" title="Filtrer par date d'échéance">
               <option value="all">Toutes</option>
               <option value="today">Aujourd'hui</option>
               <option value="week">Cette semaine</option>
@@ -68,10 +65,6 @@
             </select>
           </div>
         </div>
-      </div>
-
-      <div id="offlineIndicator" class="offline-indicator hidden">
-        Mode hors ligne - Les modifications seront synchronisées lors de la reconnexion
       </div>
 
       <ul id="taskList" class="task-list"></ul>

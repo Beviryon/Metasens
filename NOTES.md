@@ -41,3 +41,44 @@
    - Mode hors ligne robuste
    - Synchronisation efficace
    - Filtres et tri avancés
+
+# To-Do List Application
+## Prérequis
+
+- Node.js (version 14 ou supérieure)
+- npm (gestionnaire de paquets Node.js)
+
+## Installation
+
+1. Clonez le dépôt :
+```bash
+git clone https://github.com/Beviryon/Metasens.git
+```
+
+2. Installez les dépendances :
+```bash
+npm install
+```
+
+3. Lancez le serveur :
+```bash
+node server.js
+```
+
+4. Ouvrez votre navigateur et accédez à :
+```
+http://localhost:3000
+```
+
+## Identifiants de connexion
+
+Pour accéder à l'application, utilisez les identifiants suivants :
+
+- **Nom d'utilisateur** : `Metasens`
+- **Mot de passe** : `test`
+
+## Technologies utilisées
+
+- Frontend : HTML5, CSS3, JavaScript (ES6+)
+- Backend : Node.js, Express.js
+- Stockage : LocalStorage pour le mode hors ligne

@@ -3,9 +3,8 @@ let isDarkMode = localStorage.getItem('darkMode') === 'true';
 let currentFilter = 'all';
 let currentSort = 'createdAt';
 let currentDueFilter = 'all';
-let tasks = [];
+let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
 let isOnline = navigator.onLine;
-let pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
 
 // Éléments DOM
 const themeToggle = document.getElementById('themeToggle');
@@ -19,8 +18,6 @@ const authContainer = document.getElementById('auth-container');
 const app = document.getElementById('app');
 const loginForm = document.getElementById('loginForm');
 const logoutBtn = document.getElementById('logoutBtn');
-const syncButton = document.getElementById('syncButton');
-const offlineIndicator = document.getElementById('offlineIndicator');
 const sortBySelect = document.getElementById('sortBy');
 const dueDateFilter = document.getElementById('dueDateFilter');
 const dueDateInput = document.getElementById('dueDateInput');
@@ -54,10 +51,6 @@ filterAllBtn.addEventListener('click', () => setFilter('all'));
 filterActiveBtn.addEventListener('click', () => setFilter('active'));
 filterCompletedBtn.addEventListener('click', () => setFilter('completed'));
 
-// Gestion du mode hors ligne
-window.addEventListener('online', handleOnlineStatus);
-window.addEventListener('offline', handleOnlineStatus);
-
 // Gestion de l'authentification
 function checkAuth() {
   const token = localStorage.getItem('authToken');
@@ -72,12 +65,11 @@ function checkAuth() {
 }
 
 // Gestion de la connexion
-loginForm.addEventListener('submit', async (e) => {
+loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  // Simulation d'authentification
   if (username === 'Metasens' && password === 'test') {
     localStorage.setItem('authToken', 'demo-token');
     localStorage.setItem('username', username);
@@ -96,95 +88,11 @@ logoutBtn.addEventListener('click', () => {
   showNotification('Déconnexion réussie', 'info');
 });
 
-function handleOnlineStatus() {
-  isOnline = navigator.onLine;
-  offlineIndicator.classList.toggle('hidden', isOnline);
-  syncButton.classList.toggle('hidden', !isOnline);
-  
-  if (isOnline && pendingChanges.length > 0) {
-    syncTasks();
-  }
-}
-
-// Synchronisation des tâches
-async function syncTasks() {
-  if (!isOnline || pendingChanges.length === 0) return;
-
-  syncButton.classList.add('syncing');
-  
-  try {
-    for (const change of pendingChanges) {
-      await applyChange(change);
-    }
-    pendingChanges = [];
-    localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
-    showNotification('Synchronisation réussie', 'success');
-    loadTasks();
-  } catch (error) {
-    showNotification('Erreur de synchronisation', 'error');
-  } finally {
-    syncButton.classList.remove('syncing');
-  }
-}
-
-syncButton.addEventListener('click', syncTasks);
-
-// Sauvegarde des modifications en attente
-function savePendingChange(change) {
-  pendingChanges.push(change);
-  localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
-}
-
-// Appliquer une modification
-async function applyChange(change) {
-  const { type, data } = change;
-  
-  switch (type) {
-    case 'add':
-      await fetch('/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      break;
-    case 'update':
-      await fetch(`/tasks/${data.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data.changes)
-      });
-      break;
-    case 'delete':
-      await fetch(`/tasks/${data.id}`, {
-        method: 'DELETE'
-      });
-      break;
-  }
-}
-
 // Fonctions
-async function loadTasks() {
-  if (!isOnline) {
-    const localTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-    tasks = localTasks;
-    displayTasks(tasks);
-    updateFilterButtons();
-    return;
-  }
-
-  try {
-    const response = await fetch('/tasks');
-    tasks = await response.json();
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    displayTasks(tasks);
-    updateFilterButtons();
-  } catch (error) {
-    console.error('Erreur lors du chargement des tâches:', error);
-    const localTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-    tasks = localTasks;
-    displayTasks(tasks);
-    updateFilterButtons();
-  }
+function loadTasks() {
+  tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  displayTasks(tasks);
+  updateFilterButtons();
 }
 
 function updateFilterButtons() {
@@ -244,23 +152,6 @@ function displayTasks(tasks) {
     taskContainer.appendChild(deleteBtn);
     li.appendChild(taskContainer);
     
-    if (task.quote) {
-      const quoteContainer = document.createElement('div');
-      quoteContainer.className = 'quote-container';
-      
-      const quoteText = document.createElement('p');
-      quoteText.className = 'quote-text';
-      quoteText.textContent = `"${task.quote.content}"`;
-      
-      const quoteAuthor = document.createElement('p');
-      quoteAuthor.className = 'quote-author';
-      quoteAuthor.textContent = `- ${task.quote.author}`;
-      
-      quoteContainer.appendChild(quoteText);
-      quoteContainer.appendChild(quoteAuthor);
-      li.appendChild(quoteContainer);
-    }
-    
     taskList.appendChild(li);
   });
 }
@@ -284,7 +175,7 @@ function startEditing(taskId, taskElement) {
   });
 }
 
-async function finishEditing(taskId, input, taskElement) {
+function finishEditing(taskId, input, taskElement) {
   const newName = input.value.trim();
   if (!newName) {
     taskElement.textContent = tasks.find(t => t.id === taskId).name;
@@ -292,32 +183,18 @@ async function finishEditing(taskId, input, taskElement) {
     return;
   }
   
-  try {
-    const response = await fetch(`/tasks/${taskId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName })
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la modification');
-    }
-
-    const updatedTask = await response.json();
-    taskElement.textContent = updatedTask.name;
+  const taskIndex = tasks.findIndex(t => t.id === taskId);
+  if (taskIndex !== -1) {
+    tasks[taskIndex].name = newName;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    taskElement.textContent = newName;
     showNotification('Tâche modifiée avec succès', 'success');
-    await loadTasks();
-  } catch (error) {
-    console.error('Erreur:', error);
-    showNotification(error.message, 'error');
-    taskElement.textContent = tasks.find(t => t.id === taskId).name;
   }
 }
 
 function filterTasks(tasks) {
   let filteredTasks = [...tasks];
 
-  // Filtre de base (all, active, completed)
   switch (currentFilter) {
     case 'active':
       filteredTasks = filteredTasks.filter(task => !task.completed);
@@ -327,7 +204,6 @@ function filterTasks(tasks) {
       break;
   }
 
-  // Filtre par date limite
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weekEnd = new Date(today);
@@ -358,7 +234,6 @@ function filterTasks(tasks) {
       break;
   }
 
-  // Tri
   filteredTasks.sort((a, b) => {
     switch (currentSort) {
       case 'dueDate':
@@ -367,7 +242,7 @@ function filterTasks(tasks) {
         return new Date(a.dueDate) - new Date(b.dueDate);
       case 'name':
         return a.name.localeCompare(b.name);
-      default: // createdAt
+      default:
         return new Date(b.createdAt) - new Date(a.createdAt);
     }
   });
@@ -385,44 +260,30 @@ function showNotification(message, type = 'info') {
   notification.className = `notification ${type}`;
   notification.textContent = message;
   
-  // Supprimer les notifications existantes
   const existingNotifications = document.querySelectorAll('.notification');
   existingNotifications.forEach(notif => notif.remove());
   
   document.body.appendChild(notification);
   
-  // La notification disparaîtra automatiquement grâce à l'animation CSS
   setTimeout(() => {
     notification.remove();
   }, 2000);
 }
 
-async function deleteTask(id) {
-  try {
-    const taskElement = document.querySelector(`li[data-id="${id}"]`);
-    if (taskElement) {
-      taskElement.classList.add('removing');
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-
-    const response = await fetch(`/tasks/${id}`, {
-      method: 'DELETE'
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error);
-    }
-
-    showNotification('Tâche supprimée avec succès', 'success');
-    loadTasks();
-  } catch (error) {
-    console.error('Erreur lors de la suppression de la tâche:', error);
-    showNotification(error.message, 'error');
+function deleteTask(id) {
+  const taskElement = document.querySelector(`li[data-id="${id}"]`);
+  if (taskElement) {
+    taskElement.classList.add('removing');
+    setTimeout(() => {
+      tasks = tasks.filter(t => t.id !== id);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      showNotification('Tâche supprimée avec succès', 'success');
+      loadTasks();
+    }, 300);
   }
 }
 
-async function addTask() {
+function addTask() {
   const name = taskInput.value.trim();
   const dueDate = dueDateInput.value;
 
@@ -431,49 +292,30 @@ async function addTask() {
     return;
   }
 
-  try {
-    const response = await fetch('/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name,
-        dueDate: dueDate || null
-      })
-    });
+  const task = {
+    id: Date.now(),
+    name,
+    completed: false,
+    createdAt: new Date(),
+    dueDate: dueDate || null
+  };
 
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'ajout');
-    }
-
-    taskInput.value = '';
-    dueDateInput.value = '';
-    showNotification('Tâche ajoutée avec succès', 'success');
-    await loadTasks();
-  } catch (error) {
-    console.error('Erreur:', error);
-    showNotification(error.message, 'error');
-  }
+  tasks.push(task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  
+  taskInput.value = '';
+  dueDateInput.value = '';
+  showNotification('Tâche ajoutée avec succès', 'success');
+  loadTasks();
 }
 
-async function toggleTask(id) {
-  try {
-    const task = tasks.find(t => t.id === id);
-    const response = await fetch(`/tasks/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completed: !task.completed })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error);
-    }
-
-    showNotification(`Tâche marquée comme ${!task.completed ? 'terminée' : 'en cours'}`);
+function toggleTask(id) {
+  const taskIndex = tasks.findIndex(t => t.id === id);
+  if (taskIndex !== -1) {
+    tasks[taskIndex].completed = !tasks[taskIndex].completed;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    showNotification(`Tâche marquée comme ${tasks[taskIndex].completed ? 'terminée' : 'en cours'}`);
     loadTasks();
-  } catch (error) {
-    console.error('Erreur lors de la modification de la tâche:', error);
-    showNotification(error.message, 'error');
   }
 }
 
@@ -491,7 +333,6 @@ dueDateFilter.addEventListener('change', () => {
 // Initialisation de l'application
 function initializeApp() {
   initializeTheme();
-  handleOnlineStatus();
   checkAuth();
 }
 
