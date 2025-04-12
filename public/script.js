@@ -1,28 +1,28 @@
 // Variables globales
-let isDarkMode = localStorage.getItem('darkMode') === 'true';
-let currentFilter = 'all';
-let currentSort = 'createdAt';
+let isDarkMode = localStorage.getItem('darkMode') === 'true'; 
+let currentFilter = 'all'; 
+let currentSort = 'createdAt'; 
 let currentDueFilter = 'all';
-let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-let isOnline = navigator.onLine;
+let tasks = JSON.parse(localStorage.getItem('tasks') || '[]'); 
+let isOnline = navigator.onLine; 
 
-// Éléments DOM
-const themeToggle = document.getElementById('themeToggle');
+// On récupère tous les éléments de la page dont on a besoin
+const themeToggle = document.getElementById('themeToggle'); 
 const taskInput = document.getElementById('taskInput');
-const addTaskBtn = document.getElementById('addTaskBtn');
-const taskList = document.getElementById('taskList');
-const filterAllBtn = document.getElementById('filterAll');
-const filterActiveBtn = document.getElementById('filterActive');
-const filterCompletedBtn = document.getElementById('filterCompleted');
-const authContainer = document.getElementById('auth-container');
+const addTaskBtn = document.getElementById('addTaskBtn'); 
+const taskList = document.getElementById('taskList'); 
+const filterAllBtn = document.getElementById('filterAll'); 
+const filterActiveBtn = document.getElementById('filterActive'); 
+const filterCompletedBtn = document.getElementById('filterCompleted'); 
+const authContainer = document.getElementById('auth-container'); 
 const app = document.getElementById('app');
-const loginForm = document.getElementById('loginForm');
-const logoutBtn = document.getElementById('logoutBtn');
-const sortBySelect = document.getElementById('sortBy');
-const dueDateFilter = document.getElementById('dueDateFilter');
+const loginForm = document.getElementById('loginForm'); 
+const logoutBtn = document.getElementById('logoutBtn'); 
+const sortBySelect = document.getElementById('sortBy'); 
+const dueDateFilter = document.getElementById('dueDateFilter'); 
 const dueDateInput = document.getElementById('dueDateInput');
 
-// Initialisation du thème
+// Fonction pour mettre en place le thème (clair ou sombre)
 function initializeTheme() {
   if (isDarkMode) {
     document.documentElement.setAttribute('data-theme', 'dark');
@@ -33,25 +33,26 @@ function initializeTheme() {
   }
 }
 
-// Toggle le thème
+// Fonction pour changer le thème
 function toggleTheme() {
   isDarkMode = !isDarkMode;
   localStorage.setItem('darkMode', isDarkMode);
   initializeTheme();
 }
 
-// Écouteurs d'événements
+// On écoute les actions de l'utilisateur
 themeToggle.addEventListener('click', toggleTheme);
-addTaskBtn.addEventListener('click', addTask);
+addTaskBtn.addEventListener('click', addTask); 
 taskInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') addTask();
 });
 
+// Filtres pour les tâches
 filterAllBtn.addEventListener('click', () => setFilter('all'));
 filterActiveBtn.addEventListener('click', () => setFilter('active'));
 filterCompletedBtn.addEventListener('click', () => setFilter('completed'));
 
-// Gestion de l'authentification
+// Vérifie si l'utilisateur est connecté
 function checkAuth() {
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -70,6 +71,7 @@ loginForm.addEventListener('submit', (e) => {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
+  // Vérification simple des identifiants
   if (username === 'Metasens' && password === 'test') {
     localStorage.setItem('authToken', 'demo-token');
     localStorage.setItem('username', username);
@@ -88,113 +90,146 @@ logoutBtn.addEventListener('click', () => {
   showNotification('Déconnexion réussie', 'info');
 });
 
-// Fonctions
+// Charge les tâches depuis le stockage local
 function loadTasks() {
   tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
   displayTasks(tasks);
   updateFilterButtons();
 }
 
+// Met à jour l'apparence des boutons de filtre
 function updateFilterButtons() {
   filterAllBtn.classList.toggle('active', currentFilter === 'all');
   filterActiveBtn.classList.toggle('active', currentFilter === 'active');
   filterCompletedBtn.classList.toggle('active', currentFilter === 'completed');
 }
 
+// Affiche les tâches dans la liste
 function displayTasks(tasks) {
   taskList.innerHTML = '';
   const filteredTasks = filterTasks(tasks);
   
   filteredTasks.forEach(task => {
-    const li = document.createElement('li');
-    li.dataset.id = task.id;
-    
-    const taskContainer = document.createElement('div');
-    taskContainer.className = 'task-container';
-    
-    const statusSpan = document.createElement('span');
-    statusSpan.textContent = task.completed ? '✓' : '✗';
-    statusSpan.className = `status-icon ${task.completed ? 'completed' : ''}`;
-    
-    const taskText = document.createElement('span');
-    taskText.textContent = task.name;
-    taskText.className = task.completed ? 'completed' : '';
-    taskText.addEventListener('dblclick', () => startEditing(task.id, taskText));
-    
-    const dueDateSpan = document.createElement('span');
-    dueDateSpan.className = 'due-date';
-    if (task.dueDate) {
-      const dueDate = new Date(task.dueDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      dueDateSpan.textContent = dueDate.toLocaleDateString();
-      if (dueDate < today && !task.completed) {
-        dueDateSpan.classList.add('overdue');
-      }
-    }
-    
-    const completeBtn = document.createElement('button');
-    completeBtn.textContent = task.completed ? 'Terminée' : 'En cours';
-    completeBtn.className = `complete-btn ${task.completed ? 'completed' : ''}`;
-    completeBtn.addEventListener('click', () => toggleTask(task.id));
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Supprimer';
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.addEventListener('click', () => deleteTask(task.id));
-    
-    taskContainer.appendChild(statusSpan);
-    taskContainer.appendChild(taskText);
-    if (task.dueDate) {
-      taskContainer.appendChild(dueDateSpan);
-    }
-    taskContainer.appendChild(completeBtn);
-    taskContainer.appendChild(deleteBtn);
-    li.appendChild(taskContainer);
-    
+    const li = createTaskElement(task);
     taskList.appendChild(li);
   });
 }
 
-function startEditing(taskId, taskElement) {
-  const currentText = taskElement.textContent;
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = currentText;
-  input.className = 'task-editable';
-  
-  taskElement.textContent = '';
-  taskElement.appendChild(input);
-  input.focus();
-  
-  input.addEventListener('blur', () => finishEditing(taskId, input, taskElement));
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      input.blur();
-    }
-  });
+// Fonction pour créer un élément de tâche
+function createTaskElement(task) {
+    const li = document.createElement('li');
+    li.draggable = true;
+    li.dataset.id = task.id;
+
+    const taskContainer = document.createElement('div');
+    taskContainer.className = 'task-container';
+
+    // Icône de statut
+    const statusIcon = document.createElement('div');
+    statusIcon.className = `status-icon ${task.completed ? 'completed' : ''}`;
+    statusIcon.textContent = task.completed ? '✓' : '!';
+    statusIcon.title = task.completed ? 'Tâche terminée' : 'Tâche en cours';
+
+    // Texte de la tâche
+    const taskText = document.createElement('span');
+    taskText.className = `task-text ${task.completed ? 'completed' : ''}`;
+    taskText.textContent = task.name;
+
+    // Date d'échéance
+    const dueDate = document.createElement('span');
+    dueDate.className = `due-date ${isOverdue(task.dueDate) ? 'overdue' : ''}`;
+    dueDate.textContent = formatDate(task.dueDate);
+
+    // Conteneur des boutons
+    const taskButtons = document.createElement('div');
+    taskButtons.className = 'task-buttons';
+
+    // Bouton de complétion
+    const completeBtn = document.createElement('button');
+    completeBtn.className = `complete-btn ${task.completed ? 'completed' : ''}`;
+    completeBtn.innerHTML = task.completed ? '✓ Terminé' : 'Terminer';
+    completeBtn.onclick = () => toggleTaskCompletion(task.id);
+
+    // Bouton d'édition
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.innerHTML = '✎ Modifier';
+    editBtn.onclick = () => editTask(task.id);
+
+    // Bouton de suppression
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.innerHTML = '✕ Supprimer';
+    deleteBtn.onclick = () => deleteTask(task.id);
+
+    // Ajout des boutons au conteneur
+    taskButtons.appendChild(completeBtn);
+    taskButtons.appendChild(editBtn);
+    taskButtons.appendChild(deleteBtn);
+
+    // Ajout des éléments au conteneur de tâche
+    taskContainer.appendChild(statusIcon);
+    taskContainer.appendChild(taskText);
+    taskContainer.appendChild(dueDate);
+    taskContainer.appendChild(taskButtons);
+
+    // Ajout du conteneur à la liste
+    li.appendChild(taskContainer);
+    return li;
 }
 
-function finishEditing(taskId, input, taskElement) {
-  const newName = input.value.trim();
-  if (!newName) {
-    taskElement.textContent = tasks.find(t => t.id === taskId).name;
-    showNotification('Le nom de la tâche ne peut pas être vide', 'warning');
-    return;
-  }
-  
-  const taskIndex = tasks.findIndex(t => t.id === taskId);
-  if (taskIndex !== -1) {
-    tasks[taskIndex].name = newName;
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    taskElement.textContent = newName;
-    showNotification('Tâche modifiée avec succès', 'success');
-  }
+// Fonction pour éditer une tâche
+function editTask(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const taskElement = document.querySelector(`li[data-id="${taskId}"]`);
+    const taskText = taskElement.querySelector('.task-text');
+    const taskButtons = taskElement.querySelector('.task-buttons');
+
+    // Créer un champ de saisie
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'task-editable';
+    input.value = task.name;
+    input.placeholder = 'Modifier la tâche...';
+
+    taskText.replaceWith(input);
+    input.focus();
+    taskButtons.style.display = 'none';
+
+    // Fonction pour sauvegarder les modifications
+    const saveEdit = () => {
+        const newText = input.value.trim();
+        if (newText) {
+            task.name = newText;
+            saveTasks();
+            showNotification('Tâche modifiée avec succès', 'success');
+        }
+        // Restaurer l'affichage normal
+        const newTaskText = document.createElement('span');
+        newTaskText.className = `task-text ${task.completed ? 'completed' : ''}`;
+        newTaskText.textContent = task.name;
+        input.replaceWith(newTaskText);
+        taskButtons.style.display = 'flex';
+    };
+
+    // Sauvegarder lors de la pression sur Entrée
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            saveEdit();
+        }
+    });
+
+    // Sauvegarder lors de la perte de focus
+    input.addEventListener('blur', saveEdit);
 }
 
+// Filtre les tâches selon les critères choisis
 function filterTasks(tasks) {
   let filteredTasks = [...tasks];
 
+  // Filtre par statut (toutes, en cours, terminées)
   switch (currentFilter) {
     case 'active':
       filteredTasks = filteredTasks.filter(task => !task.completed);
@@ -209,6 +244,7 @@ function filterTasks(tasks) {
   const weekEnd = new Date(today);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
+  // Filtre par date
   switch (currentDueFilter) {
     case 'today':
       filteredTasks = filteredTasks.filter(task => {
@@ -234,6 +270,7 @@ function filterTasks(tasks) {
       break;
   }
 
+  // Trie les tâches
   filteredTasks.sort((a, b) => {
     switch (currentSort) {
       case 'dueDate':
@@ -250,11 +287,13 @@ function filterTasks(tasks) {
   return filteredTasks;
 }
 
+// Change le filtre actuel
 function setFilter(filter) {
   currentFilter = filter;
   loadTasks();
 }
 
+// Affiche une notification à l'écran
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
@@ -270,6 +309,7 @@ function showNotification(message, type = 'info') {
   }, 2000);
 }
 
+// Supprime une tâche
 function deleteTask(id) {
   const taskElement = document.querySelector(`li[data-id="${id}"]`);
   if (taskElement) {
@@ -283,6 +323,7 @@ function deleteTask(id) {
   }
 }
 
+// Ajoute une nouvelle tâche
 function addTask() {
   const name = taskInput.value.trim();
   const dueDate = dueDateInput.value;
@@ -309,6 +350,7 @@ function addTask() {
   loadTasks();
 }
 
+// Change le statut d'une tâche (terminée/en cours)
 function toggleTask(id) {
   const taskIndex = tasks.findIndex(t => t.id === id);
   if (taskIndex !== -1) {
@@ -319,7 +361,7 @@ function toggleTask(id) {
   }
 }
 
-// Écouteurs d'événements pour les filtres
+// Écouteurs pour les filtres
 sortBySelect.addEventListener('change', () => {
   currentSort = sortBySelect.value;
   displayTasks(tasks);
@@ -330,12 +372,12 @@ dueDateFilter.addEventListener('change', () => {
   displayTasks(tasks);
 });
 
-// Initialisation de l'application
+// Initialise l'application
 function initializeApp() {
   initializeTheme();
   checkAuth();
 }
 
-// Démarrage de l'application
+// Démarre l'application
 initializeApp();
   
