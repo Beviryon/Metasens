@@ -15,17 +15,6 @@ app.use(cors({
   credentials: true
 }));
 
-// Base de données simulée
-let tasks = [
-  { 
-    id: 1, 
-    name: "Exemple de tâche", 
-    completed: false,
-    createdAt: new Date(),
-    dueDate: null,
-    order: 0
-  }
-];
 
 // Middleware
 app.use(express.json());
@@ -34,11 +23,9 @@ app.use(express.static('public'));
 // Routes API
 app.get('/tasks', (req, res) => {
   const sortedTasks = [...tasks].sort((a, b) => {
-    // Si l'ordre est défini, utiliser l'ordre personnalisé
     if (a.order !== undefined && b.order !== undefined) {
       return a.order - b.order;
     }
-    // Sinon, trier par date de création
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
   res.json(sortedTasks);
